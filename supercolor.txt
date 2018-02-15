@@ -1,0 +1,13 @@
+label of super color/ (colors that belongs to it+)
+
+black/(black)
+white/(white,cream)
+blue/(navy blue,blue,light blue,electric blue,turquoise,sea green)
+pink/(dusty pink,pink,raspberry,purple,lilac)
+yellow/(yellow)
+orange/(orange,coral)
+brown/(brown,beige)
+red/(red,burgundy)
+grey/(dark grey,grey,light grey)
+metal/(metalised,gold)
+multicolor/(multicolor)

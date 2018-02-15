@@ -1,0 +1,10 @@
+label of super category/ (category that belongs to it+)
+
+cardigan/(long cardigan,short cardigan,wrap over top,blazer)
+dress/(winter dress,summer dress)
+skirt/(long skirt,mid skirt,short skirt)
+pullover/(zipped sweatshirt,sweatshirt,pullover)
+top/(blouse,long-sleeved shirt,button blouse)
+t-shirt/(t-shirt,tank top,croc top)
+pants/(pants,chino,jeans)
+short/(short,overall)
