@@ -187,4 +187,4 @@ ax5.pie(nb_occ,labels=cat,labeldistance = 1.1, autopct='%1.0f%%',
 ax5.axis('equal')
 plt.title('pants versus dress during '+month_sentence)
 
-#plt.show()
+plt.show()
