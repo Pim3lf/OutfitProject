@@ -5,12 +5,27 @@ from collections import Counter
 import matplotlib.pyplot as plt
 
 now = datetime.datetime.now()
-arguments = sys.argv[1:]
-months_of_interest = [1,2,3,4,5,6,7,8,9,10,11,12]
+arguments = sys.argv[1:] #position zero is the name of the script
+months_of_interest = [1,2,3,4,5,6,7,8,9,10,11,12] #the whole year
+date_of_interest = []
+date_present = False
+
 if(len(arguments) != 0):
     months_of_interest = []
     for a in arguments :
+        if(a == 'date') :
+            break
         months_of_interest.append(int(a))
+
+    for a in arguments:
+        if a == 'date':
+            date_present = True
+            continue
+        if date_present:
+            date_of_interest.append(a)
+
+
+
 
 
 clths = open("clothes.txt",'r')
@@ -62,6 +77,12 @@ pants_vs_dress_count = Counter()
 
 nb_clothes = 0
 
+if not date_present :
+    date_of_interest = outfit_lines[-1].split('/')[0].split('.')
+    #date_of_interest = list(map(int,date_of_interest))
+
+clothes_date = []
+
 for o in outfit_lines:
     line = o.split('/')
     date = line[0]
@@ -70,6 +91,10 @@ for o in outfit_lines:
     notes = line[2:]
     for c in clothes :
         mask = np.isin(int(month),months_of_interest)
+        if(date.split('.') == date_of_interest):
+            clothes_date.append(c) #collect the names
+
+
         if(mask):
             clothes_count.update([c])
             nb_clothes += 1
@@ -81,7 +106,9 @@ for o in outfit_lines:
             shop_count.update([clothes_map.get(c)[-2]])
             color_count.update([clothes_map.get(c)[1].replace('(','').replace(')','').split(',')[0]])
 
-clothes_list, clothes_repartition = zip(*clothes_count.most_common())
+
+c_c_m_c = clothes_count.most_common()
+clothes_list, clothes_repartition = zip(*c_c_m_c)
 
 clothes_repartition = np.array(clothes_repartition)
 number_equal = len(clothes_repartition[clothes_repartition == clothes_repartition[0]])
@@ -89,12 +116,35 @@ number_equal = len(clothes_repartition[clothes_repartition == clothes_repartitio
 year_count = Counter()
 age = datetime.timedelta()
 nb_clothes_no_repetition= 0
+
 for c in clothes_list :
     nb_clothes_no_repetition += 1
     months_year = clothes_map.get(c)[-1].replace('\n', '').split('.')
     year_count.update([months_year[1]])
     age += abs(datetime.date(int(months_year[1]), int(months_year[0]), 1) - datetime.date(now.year, now.month, now.day))
 
+age_date = datetime.timedelta()
+nb_clothes_date= 0
+nb_occ_date = 0
+for c in clothes_date :
+    nb_clothes_date += 1
+    for cm in c_c_m_c :
+        if cm[0]== c:
+            nb_occ_date +=  cm[1]
+    months_year = clothes_map.get(c)[-1].replace('\n', '').split('.')
+    age_date += abs(datetime.date(int(months_year[1]), int(months_year[0]), 1) - datetime.date(now.year, now.month, now.day))
+
+
+
+mean_age_date = (age_date/nb_clothes_date).days
+nb_years_date = np.floor(mean_age_date/365)
+nb_months_date = np.floor((mean_age_date%365)/30)
+
+print("the outfit worn the {day} {month} {year} is {y} years and {m} months old".format(day = date_of_interest[0],month = months_map.get(int(date_of_interest[1])),year = date_of_interest[2],y = nb_years_date, m = nb_months_date))
+if(nb_occ_date == nb_clothes_date):
+    print('the outfit is novel')
+else :
+    print('you have already worn some clothes in this outfit')
 mean_age = (age/nb_clothes_no_repetition).days
 nb_years = np.floor(mean_age/365)
 nb_months = np.floor((mean_age%365)/30)
@@ -187,4 +237,4 @@ ax5.pie(nb_occ,labels=cat,labeldistance = 1.1, autopct='%1.0f%%',
 ax5.axis('equal')
 plt.title('pants versus dress during '+month_sentence)
 
-plt.show()
+#plt.show()
