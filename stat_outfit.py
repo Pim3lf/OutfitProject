@@ -74,6 +74,7 @@ color_count = Counter()
 clothes_count = Counter()
 cat_count = Counter()
 pants_vs_dress_count = Counter()
+outfit_count = []
 
 nb_clothes = 0
 
@@ -87,14 +88,14 @@ for o in outfit_lines:
     line = o.split('/')
     date = line[0]
     month = date.split('.')[1]
+    mask = np.isin(int(month), months_of_interest)
     clothes = line[1].replace('(','').replace(')','').split(',')
+    if(month < date_of_interest[1] or (month == date_of_interest[1] and date.split('.')[0] <= date_of_interest[0])):
+        outfit_count.append(clothes)
     notes = line[2:]
     for c in clothes :
-        mask = np.isin(int(month),months_of_interest)
         if(date.split('.') == date_of_interest):
             clothes_date.append(c) #collect the names
-
-
         if(mask):
             clothes_count.update([c])
             nb_clothes += 1
@@ -128,9 +129,6 @@ nb_clothes_date= 0
 nb_occ_date = 0
 for c in clothes_date :
     nb_clothes_date += 1
-    for cm in c_c_m_c :
-        if cm[0]== c:
-            nb_occ_date +=  cm[1]
     months_year = clothes_map.get(c)[-1].replace('\n', '').split('.')
     age_date += abs(datetime.date(int(months_year[1]), int(months_year[0]), 1) - datetime.date(now.year, now.month, now.day))
 
@@ -141,10 +139,10 @@ nb_years_date = np.floor(mean_age_date/365)
 nb_months_date = np.floor((mean_age_date%365)/30)
 
 print("the outfit worn the {day} {month} {year} is {y} years and {m} months old".format(day = date_of_interest[0],month = months_map.get(int(date_of_interest[1])),year = date_of_interest[2],y = nb_years_date, m = nb_months_date))
-if(nb_occ_date == nb_clothes_date):
-    print('the outfit is novel')
-else :
-    print('you have already worn some clothes in this outfit')
+
+
+
+
 mean_age = (age/nb_clothes_no_repetition).days
 nb_years = np.floor(mean_age/365)
 nb_months = np.floor((mean_age%365)/30)
@@ -170,7 +168,20 @@ if(len(months_of_interest)== 12):
 else :
     month_sentence = start + month_sentence
 
+count_outfit = 0
+for o in outfit_count:
+    if(o == clothes_date):
+        count_outfit+=1
+
+if(count_outfit == 1):
+    print("the outfit is novel")
+else :
+    print("the outfit has already been worn during this year")
+
 print("the wardrobe actually worn during {mo} contains {n} items and is {y} year{plur} and {m} months old".format(mo = month_sentence,n=nb_clothes_no_repetition,y = nb_years, plur = s, m = nb_months))
+
+
+
 
 most_worn = ''
 for m in clothes_list[0:number_equal]:
