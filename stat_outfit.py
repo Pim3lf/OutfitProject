@@ -200,7 +200,8 @@ n_copy = np.array(n)-nb_clothes*other_threshold
 to_keep = sum(1 for i in n_copy if i > 0)
 shop_majority = shop_count.most_common(to_keep)
 _,n = zip(*shop_majority)
-shop_majority.append(('others',nb_clothes-np.sum(n)))
+if nb_clothes-np.sum(n) > 0 :
+    shop_majority.append(('others',nb_clothes-np.sum(n)))
 shop_list,occ = zip(*shop_majority)
 
 fig1, ax1 = plt.subplots()
@@ -217,7 +218,8 @@ nb_color_copy = np.array(nb_color)-total_color*other_threshold
 to_keep = sum(1 for i in nb_color_copy if i > 0)
 color_majority =color_count.most_common(to_keep)
 _,nb_color = zip(*color_majority)
-color_majority.append(('others',total_color-np.sum(nb_color)))
+if total_color-np.sum(nb_color) > 0 :
+    color_majority.append(('others',total_color-np.sum(nb_color)))
 colors,nb_color = zip(*color_majority)
 
 ax2.pie(nb_color,labels=colors,labeldistance = 1.1, autopct='%1.0f%%',
@@ -248,4 +250,4 @@ ax5.pie(nb_occ,labels=cat,labeldistance = 1.1, autopct='%1.0f%%',
 ax5.axis('equal')
 plt.title('pants versus dress during '+month_sentence)
 
-#plt.show()
+plt.show()
