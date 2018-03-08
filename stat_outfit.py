@@ -9,24 +9,25 @@ arguments = sys.argv[1:] #position zero is the name of the script
 months_of_interest = [1,2,3,4,5,6,7,8,9,10,11,12] #the whole year
 date_of_interest = []
 date_present = False
+show = False
 
 if(len(arguments) != 0):
     months_of_interest = []
     for a in arguments :
-        if(a == 'date') :
+        if(a == 'date' or a == 'show') :
+            if len(months_of_interest) == 0:
+                months_of_interest = [1,2,3,4,5,6,7,8,9,10,11,12]
             break
         months_of_interest.append(int(a))
 
     for a in arguments:
+        if a == 'show':
+            show = True
         if a == 'date':
             date_present = True
             continue
         if date_present:
             date_of_interest.append(a)
-
-
-
-
 
 clths = open("clothes.txt",'r')
 outfit = open("outfit.txt",'r')
@@ -71,6 +72,7 @@ for m in months_lines:
 #counter of shop occurence repetition of clothes allowed
 shop_count = Counter()
 color_count = Counter()
+clothes_date_count = Counter()
 clothes_count = Counter()
 cat_count = Counter()
 pants_vs_dress_count = Counter()
@@ -97,7 +99,8 @@ for o in outfit_lines:
         if(date.split('.') == date_of_interest):
             clothes_date.append(c) #collect the names
         if(mask):
-            clothes_count.update([c])
+            #to count only occurence of a clothe when worn 2 or more times in the day with something different
+            clothes_date_count.update([(date,c)])
             nb_clothes += 1
             supercat = sc_map.get(clothes_map.get(c)[0])
             super_super_category = super_super_cat.get(supercat)
@@ -107,6 +110,10 @@ for o in outfit_lines:
             shop_count.update([clothes_map.get(c)[-2]])
             color_count.update([clothes_map.get(c)[1].replace('(','').replace(')','').split(',')[0]])
 
+
+clo_date,occ = zip(*clothes_date_count.most_common())
+for c_d in clo_date:
+    clothes_count.update([c_d[1]])
 
 c_c_m_c = clothes_count.most_common()
 clothes_list, clothes_repartition = zip(*c_c_m_c)
@@ -127,7 +134,8 @@ for c in clothes_list :
 age_date = datetime.timedelta()
 nb_clothes_date= 0
 nb_occ_date = 0
-for c in clothes_date :
+
+for c in np.unique(np.array(clothes_date)) :
     nb_clothes_date += 1
     months_year = clothes_map.get(c)[-1].replace('\n', '').split('.')
     age_date += abs(datetime.date(int(months_year[1]), int(months_year[0]), 1) - datetime.date(now.year, now.month, now.day))
@@ -170,8 +178,13 @@ else :
 
 count_outfit = 0
 for o in outfit_count:
-    if(o == clothes_date):
+    if o == clothes_date :
         count_outfit+=1
+if count_outfit == 0:
+    for o in outfit_count:
+        mask = np.isin(o,clothes_date)
+        if(np.all(mask)):
+            count_outfit+=1
 
 if(count_outfit == 1):
     print("the outfit is novel")
@@ -192,62 +205,65 @@ if(number_equal == 1):
 else:
     most_worn = ' are '+most_worn
 print("the most worn item during "+month_sentence+most_worn+" with "+str(clothes_repartition[0])+" occurences")
-other_threshold = 0.037
 
-shop_majority = shop_count.most_common()
-_,n = zip(*shop_majority)
-n_copy = np.array(n)-nb_clothes*other_threshold
-to_keep = sum(1 for i in n_copy if i > 0)
-shop_majority = shop_count.most_common(to_keep)
-_,n = zip(*shop_majority)
-if nb_clothes-np.sum(n) > 0 :
-    shop_majority.append(('others',nb_clothes-np.sum(n)))
-shop_list,occ = zip(*shop_majority)
+#plot part
+if show:
+    other_threshold = 0.037
 
-fig1, ax1 = plt.subplots()
-ax1.pie(occ,labels=shop_list,labeldistance = 1.1, autopct='%1.0f%%',
-        shadow=True, startangle=90)
-ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-plt.title("most worn brand during "+month_sentence)
+    shop_majority = shop_count.most_common()
+    _,n = zip(*shop_majority)
+    n_copy = np.array(n)-nb_clothes*other_threshold
+    to_keep = sum(1 for i in n_copy if i > 0)
+    shop_majority = shop_count.most_common(to_keep)
+    _,n = zip(*shop_majority)
+    if nb_clothes-np.sum(n) > 0 :
+        shop_majority.append(('others',nb_clothes-np.sum(n)))
+    shop_list,occ = zip(*shop_majority)
 
-
-fig2,ax2 = plt.subplots()
-_,nb_color = zip(*color_count.most_common())
-total_color = sum(nb_color)
-nb_color_copy = np.array(nb_color)-total_color*other_threshold
-to_keep = sum(1 for i in nb_color_copy if i > 0)
-color_majority =color_count.most_common(to_keep)
-_,nb_color = zip(*color_majority)
-if total_color-np.sum(nb_color) > 0 :
-    color_majority.append(('others',total_color-np.sum(nb_color)))
-colors,nb_color = zip(*color_majority)
-
-ax2.pie(nb_color,labels=colors,labeldistance = 1.1, autopct='%1.0f%%',
-        shadow=True, startangle=90)
-ax2.axis('equal')
-plt.title('most worn color during '+month_sentence)
+    fig1, ax1 = plt.subplots()
+    ax1.pie(occ,labels=shop_list,labeldistance = 1.1, autopct='%1.0f%%',
+            shadow=True, startangle=90)
+    ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+    plt.title("most worn brand during "+month_sentence)
 
 
+    fig2,ax2 = plt.subplots()
+    _,nb_color = zip(*color_count.most_common())
+    total_color = sum(nb_color)
+    nb_color_copy = np.array(nb_color)-total_color*other_threshold
+    to_keep = sum(1 for i in nb_color_copy if i > 0)
+    color_majority =color_count.most_common(to_keep)
+    _,nb_color = zip(*color_majority)
+    if total_color-np.sum(nb_color) > 0 :
+        color_majority.append(('others',total_color-np.sum(nb_color)))
+    colors,nb_color = zip(*color_majority)
 
-fig3,ax3 = plt.subplots()
-years,nb_year = zip(*year_count.most_common())
-ax3.pie(nb_year,labels=years,labeldistance = 1.1, autopct='%1.0f%%',
-        shadow=True, startangle=90)
-ax3.axis('equal')
-plt.title('Year of origin of worn clothes during '+month_sentence)
+    ax2.pie(nb_color,labels=colors,labeldistance = 1.1, autopct='%1.0f%%',
+            shadow=True, startangle=90)
+    ax2.axis('equal')
+    plt.title('most worn color during '+month_sentence)
 
-fig4,ax4 = plt.subplots()
-cat,nb_occ = zip(*cat_count.most_common())
-ax4.pie(nb_occ,labels=cat,labeldistance = 1.1, autopct='%1.0f%%',
-        shadow=True, startangle=90)
-ax4.axis('equal')
-plt.title('category of worn clothes during '+month_sentence)
 
-fig5,ax5 = plt.subplots()
-cat,nb_occ = zip(*pants_vs_dress_count.most_common())
-ax5.pie(nb_occ,labels=cat,labeldistance = 1.1, autopct='%1.0f%%',
-        shadow=True, startangle=90)
-ax5.axis('equal')
-plt.title('pants versus dress during '+month_sentence)
 
-plt.show()
+    fig3,ax3 = plt.subplots()
+    years,nb_year = zip(*year_count.most_common())
+    ax3.pie(nb_year,labels=years,labeldistance = 1.1, autopct='%1.0f%%',
+            shadow=True, startangle=90)
+    ax3.axis('equal')
+    plt.title('Year of origin of worn clothes during '+month_sentence)
+
+    fig4,ax4 = plt.subplots()
+    cat,nb_occ = zip(*cat_count.most_common())
+    ax4.pie(nb_occ,labels=cat,labeldistance = 1.1, autopct='%1.0f%%',
+            shadow=True, startangle=90)
+    ax4.axis('equal')
+    plt.title('category of worn clothes during '+month_sentence)
+
+    fig5,ax5 = plt.subplots()
+    cat,nb_occ = zip(*pants_vs_dress_count.most_common())
+    ax5.pie(nb_occ,labels=cat,labeldistance = 1.1, autopct='%1.0f%%',
+            shadow=True, startangle=90)
+    ax5.axis('equal')
+    plt.title('pants versus dress during '+month_sentence)
+
+    plt.show()
